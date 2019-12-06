@@ -14,50 +14,36 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Authors: Joe Kopena <tjkopena@cs.drexel.edu>
- * Modified by: Longhao Zou, Oct 2016 for EE500 <longhao.zou@dcu.ie>
+ *
+ * This program conducts a simple experiment: It places two nodes at a
+ * parameterized distance apart.  One node generates packets and the
+ * other node receives.  The stat framework collects data on packet
+ * loss.  Outside of this program, a control script uses that data to
+ * produce graphs presenting performance at the varying distances.
+ * This isn't a typical simulation but is a common "experiment"
+ * performed in real life and serves as an accessible exemplar for the
+ * stat framework.  It also gives some intuition on the behavior and
+ * basic reasonability of the NS-3 WiFi models.
+ *
+ * Applications used by this program are in test02-apps.h and
+ * test02-apps.cc, which should be in the same place as this file.
  * 
- 
-            EE500 Assignment 2016-2017
-            Default WiFi Network Topology
-  
-                WiFi 192.168.0.0
-            -------------------------
-            |AP (node 0:192.168.0.1)|
-            -------------------------
-             *         *           *    
-            /          |            \
-  Traffic 1/  Traffic 2|    ------   \ Traffic N
-          /            |              \
-      user 1       user 2     ------   user N
-   (node 1         (node 2     ------  (node N
-   :192.168.0.2    :192.168.0.3 ------ :192.168.0.N+1
-   :1000)          :1001)        ------:1000+(N-1))
-   
-   PS: In this example, I just implemented only 1 WiFi user.
-   
  */
-  
+
 #include <ctime>
-
 #include <sstream>
-
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/mobility-module.h"
-#include "ns3/wifi-module.h"
 #include "ns3/internet-module.h"
-
 #include "ns3/stats-module.h"
-
+#include "ns3/yans-wifi-helper.h"
 #include "wifi-example-apps.h"
 
 using namespace ns3;
 using namespace std;
 
-NS_LOG_COMPONENT_DEFINE ("WiFiExampleSim");
-
-
-
+NS_LOG_COMPONENT_DEFINE ("WiFiDistanceExperiment");
 
 void TxCallback (Ptr<CounterCalculator<uint32_t> > datac,
                  std::string path, Ptr<const Packet> packet) {
@@ -74,15 +60,14 @@ void TxCallback (Ptr<CounterCalculator<uint32_t> > datac,
 //-- main
 //----------------------------------------------
 int main (int argc, char *argv[]) {
-  //LogComponentEnable ("WiFiDistanceApps", LOG_LEVEL_INFO);
-  double distance = 50.0;
-  double simTime = 20; //Simulation Running Time (in seconds)
-  string format ("db"); //Default as .db format (Please refer to sqlite-data-output.cc and sqlite-data-output.h located in /src/stats/model)
 
-  string experiment ("wifi-example-sim"); //the name of your experiment
-  string strategy ("wifi-default"); 
+  double distance = 50.0;
+  string format ("omnet");
+
+  string experiment ("wifi-distance-test");
+  string strategy ("wifi-default");
   string input;
-  string runID; 
+  string runID;
 
   {
     stringstream sstr;
@@ -94,9 +79,8 @@ int main (int argc, char *argv[]) {
   CommandLine cmd;
   cmd.AddValue ("distance", "Distance apart to place nodes (in meters).",
                 distance);
-  //cmd.AddValue ("format", "Format to use for data output.", 
-    //            format);
-  cmd.AddValue ("simTime", "Simulation Running Time (in seconds)", simTime);
+  cmd.AddValue ("format", "Format to use for data output.",
+                format);
   cmd.AddValue ("experiment", "Identifier for experiment.",
                 experiment);
   cmd.AddValue ("strategy", "Identifier for strategy.",
@@ -134,8 +118,8 @@ int main (int argc, char *argv[]) {
   nodes.Create (2);
 
   NS_LOG_INFO ("Installing WiFi and Internet stack.");
-  WifiHelper wifi; // = WifiHelper();
-  WifiMacHelper wifiMac; //= WifiMacHelper();
+  WifiHelper wifi;
+  WifiMacHelper wifiMac;
   wifiMac.SetType ("ns3::AdhocWifiMac");
   YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
@@ -147,7 +131,10 @@ int main (int argc, char *argv[]) {
   Ipv4AddressHelper ipAddrs;
   ipAddrs.SetBase ("192.168.0.0", "255.255.255.0");
   ipAddrs.Assign (nodeDevices);
-  
+
+
+
+
   //------------------------------------------------------------
   //-- Setup physical layout
   //--------------------------------------------
@@ -161,11 +148,10 @@ int main (int argc, char *argv[]) {
   mobility.Install (nodes);
 
 
+
+
   //------------------------------------------------------------
-  //-- Create the traffic between AP and WiFi Users
-  //------------------------------------------------------------
-  //------------------------------------------------------------
-  //-- 1. Create the first traffic for the first WiFi user on WiFi AP (source)
+  //-- Create a custom traffic source and sink
   //--------------------------------------------
   NS_LOG_INFO ("Create traffic source & sink.");
   Ptr<Node> appSource = NodeList::GetNode (0);
@@ -175,38 +161,32 @@ int main (int argc, char *argv[]) {
   sender->SetAttribute("Interval", StringValue ("ns3::ConstantRandomVariable[Constant=0.05]")); //seconds
   sender->SetAttribute("NumPackets",UintegerValue (100000000));
   appSource->AddApplication (sender);
-  sender->SetStartTime (Seconds (0));
+  sender->SetStartTime (Seconds (1));
 
-  //------------------------------------------------------------
-  //-- 2. Create the first WiFi User (sink)
-  //--------------------------------------------
   Ptr<Node> appSink = NodeList::GetNode (1);
   Ptr<Receiver> receiver = CreateObject<Receiver>();
-  receiver->SetAttribute("Port", UintegerValue(1000));//Lisening Port
   appSink->AddApplication (receiver);
   receiver->SetStartTime (Seconds (0));
-  
-  //Set IP address of the first User to AP (source)
+
   Config::Set ("/NodeList/*/ApplicationList/*/$Sender/Destination",
                Ipv4AddressValue ("192.168.0.2"));
 
-  
+
 
 
   //------------------------------------------------------------
-  //-- Setup stats and data collection 
-  //--  for the WiFi AP and the first WiFi User
+  //-- Setup stats and data collection
   //--------------------------------------------
 
   // Create a DataCollector object to hold information about this run.
-  DataCollector dataofuser1;
-  dataofuser1.DescribeRun (experiment,
-                    strategy,
+  DataCollector data;
+  data.DescribeRun (experiment,
+		  strategy,
                     input,
                     runID);
 
   // Add any information we wish to record about this run.
-  dataofuser1.AddMetadata ("author", "EE500-XXX"); //Please replace XXX with your first name!
+  data.AddMetadata ("author", "tjkopena");
 
 
   // Create a counter to track how many frames are generated.  Updates
@@ -219,7 +199,7 @@ int main (int argc, char *argv[]) {
   totalTx->SetContext ("node[0]");
   Config::Connect ("/NodeList/0/DeviceList/*/$ns3::WifiNetDevice/Mac/MacTx",
                    MakeBoundCallback (&TxCallback, totalTx));
-  dataofuser1.AddDataCalculator (totalTx);
+  data.AddDataCalculator (totalTx);
 
   // This is similar, but creates a counter to track how many frames
   // are received.  Instead of our own glue function, this uses a
@@ -232,7 +212,7 @@ int main (int argc, char *argv[]) {
   Config::Connect ("/NodeList/1/DeviceList/*/$ns3::WifiNetDevice/Mac/MacRx",
                    MakeCallback (&PacketCounterCalculator::PacketUpdate,
                                  totalRx));
-  dataofuser1.AddDataCalculator (totalRx);
+  data.AddDataCalculator (totalRx);
 
 
 
@@ -247,7 +227,7 @@ int main (int argc, char *argv[]) {
   Config::Connect ("/NodeList/0/ApplicationList/*/$Sender/Tx",
                    MakeCallback (&PacketCounterCalculator::PacketUpdate,
                                  appTx));
-  dataofuser1.AddDataCalculator (appTx);
+  data.AddDataCalculator (appTx);
 
   // Here a counter for received packets is directly manipulated by
   // one of the custom objects in our simulation, the Receiver
@@ -258,7 +238,7 @@ int main (int argc, char *argv[]) {
   appRx->SetKey ("receiver-rx-packets");
   appRx->SetContext ("node[1]");
   receiver->SetCounter (appRx);
-  dataofuser1.AddDataCalculator (appRx);
+  data.AddDataCalculator (appRx);
 
 
 
@@ -288,7 +268,7 @@ int main (int argc, char *argv[]) {
                    MakeCallback
                      (&PacketSizeMinMaxAvgTotalCalculator::PacketUpdate,
                      appTxPkts));
-  dataofuser1.AddDataCalculator (appTxPkts);
+  data.AddDataCalculator (appTxPkts);
 
 
   // Here we directly manipulate another DataCollector tracking min,
@@ -299,8 +279,8 @@ int main (int argc, char *argv[]) {
     CreateObject<TimeMinMaxAvgTotalCalculator>();
   delayStat->SetKey ("delay");
   delayStat->SetContext (".");
-  receiver->SetDelayTracker (delayStat); //nanoseconds
-  dataofuser1.AddDataCalculator (delayStat);
+  receiver->SetDelayTracker (delayStat);
+  data.AddDataCalculator (delayStat);
 
 
 
@@ -309,9 +289,8 @@ int main (int argc, char *argv[]) {
   //-- Run the simulation
   //--------------------------------------------
   NS_LOG_INFO ("Run Simulation.");
-  Simulator::Stop(Seconds(simTime));
   Simulator::Run ();
-  
+
 
 
 
@@ -336,12 +315,9 @@ int main (int argc, char *argv[]) {
   // Finally, have that writer interrogate the DataCollector and save
   // the results.
   if (output != 0)
-  {
-    output->SetFilePrefix("DataOfUser1");
-    output->Output (dataofuser1);
-  }
+    output->Output (data);
+
   // Free any memory here at the end of this example.
-  
   Simulator::Destroy ();
 
   // end main
