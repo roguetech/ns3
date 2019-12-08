@@ -1,6 +1,7 @@
 #!/bin/sh
 
-DISTANCES="0 10 20 30 40 50 60 70 80 90 100 110 120 130 140 150"
+DISTANCES="30 60 90 120 150"
+numberOfNodes="1 5 10 15 20"
 TRIALS="1"
 
 SIMTIME=20 #Default in wifi-example-sim.cc: The transmission Time approximately equals to the Simulation Running Time
@@ -43,10 +44,13 @@ fi
 
 for trial in $TRIALS
 do
-  for distance in $DISTANCES
+  for numberOfNodes in $numberOfNodes
   do
-    echo Trial $trial, distance $distance
-    ../../waf --run "WiFi-QB --distance=$distance --run=run-$distance-$trial"
+    for distance in $DISTANCES
+    do
+       echo Trial $trial, distance $distance, numberOfNodes $numberOfNodes
+       ../../waf --run "WiFi-QC3 --distance=$distance --numberOfNodes=$numberOfNodes --run=run-$distance-$trial-$numberOfNodes"
+    done
   done
 done
 

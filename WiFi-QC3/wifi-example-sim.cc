@@ -244,6 +244,13 @@ int main (int argc, char *argv[]) {
                                  totalRx1));
   	dataofuser1.AddDataCalculator (totalRx1);
 
+	Ptr<TimeMinMaxAvgTotalCalculator> delayStat =
+    	CreateObject<TimeMinMaxAvgTotalCalculator>();
+  	delayStat->SetKey ("delay");
+  	delayStat->SetContext (".");
+  	receiver->SetDelayTracker (delayStat); //nanoseconds
+  	dataofuser1.AddDataCalculator (delayStat);
+
   }
   Config::Set ("/NodeList/0/ApplicationList/0/$Sender/Destination",
                  Ipv4AddressValue ("192.168.0.2"));
@@ -391,12 +398,12 @@ int main (int argc, char *argv[]) {
   // max, total, and average propagation delays.  Check out the Sender
   // and Receiver classes to see how packets are tagged with
   // timestamps to do this.
-  Ptr<TimeMinMaxAvgTotalCalculator> delayStat =
-    CreateObject<TimeMinMaxAvgTotalCalculator>();
-  delayStat->SetKey ("delay");
-  delayStat->SetContext (".");
+  //Ptr<TimeMinMaxAvgTotalCalculator> delayStat =
+  //  CreateObject<TimeMinMaxAvgTotalCalculator>();
+  //delayStat->SetKey ("delay");
+  //delayStat->SetContext (".");
   //receiver->SetDelayTracker (delayStat); //nanoseconds
-  dataofuser1.AddDataCalculator (delayStat);
+  //dataofuser1.AddDataCalculator (delayStat);
 
   wifiPhy.EnablePcapAll ("first");
 
