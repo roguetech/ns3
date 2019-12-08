@@ -244,7 +244,7 @@ Receiver::Receive (Ptr<Socket> socket)
   Address from;
   while ((packet = socket->RecvFrom (from))) {
       if (InetSocketAddress::IsMatchingType (from)) {
-          NS_LOG_INFO (Simulator::Now () <<" Received " << packet->GetSize () << " bytes from " <<
+          NS_LOG_INFO ("Received " << packet->GetSize () << " bytes from " <<
                        InetSocketAddress::ConvertFrom (from).GetIpv4 ());
         }
 

@@ -134,9 +134,8 @@ int main (int argc, char *argv[]) {
   nodes.Create (2);
 
   NS_LOG_INFO ("Installing WiFi and Internet stack.");
-  WifiHelper wifi; // = WifiHelper();
-  wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
-  WifiMacHelper wifiMac; //= WifiMacHelper();
+  WifiHelper wifi; //= WifiHelper ();
+  WifiMacHelper wifiMac; //= NqosWifiMacHelper ();
   wifiMac.SetType ("ns3::AdhocWifiMac");
   YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
@@ -207,7 +206,7 @@ int main (int argc, char *argv[]) {
                     runID);
 
   // Add any information we wish to record about this run.
-  dataofuser1.AddMetadata ("author", "EE500-XXX"); //Please replace XXX with your first name!
+  dataofuser1.AddMetadata ("author", "EE500-PatrickRoughan"); //Please replace XXX with your first name!
 
 
   // Create a counter to track how many frames are generated.  Updates
