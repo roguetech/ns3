@@ -134,8 +134,8 @@ int main (int argc, char *argv[]) {
   nodes.Create (2);
 
   NS_LOG_INFO ("Installing WiFi and Internet stack.");
-  WifiHelper wifi; // = WifiHelper();
-  WifiMacHelper wifiMac; //= WifiMacHelper();
+  WifiHelper wifi;
+  WifiMacHelper wifiMac;
   wifiMac.SetType ("ns3::AdhocWifiMac");
   YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
@@ -172,7 +172,7 @@ int main (int argc, char *argv[]) {
   Ptr<Sender> sender = CreateObject<Sender>();
   sender->SetAttribute("Port", UintegerValue(1000));//Lisening Port of the first WiFi user
   sender->SetAttribute("PacketSize", UintegerValue (1000)); //bytes
-  sender->SetAttribute("Interval", StringValue ("ns3::ConstantRandomVariable[Constant=0.05]")); //seconds
+  sender->SetAttribute("Interval", StringValue ("ns3::ConstantRandomVariable[Constant=0.006]")); //seconds
   sender->SetAttribute("NumPackets",UintegerValue (100000000));
   appSource->AddApplication (sender);
   sender->SetStartTime (Seconds (0));
