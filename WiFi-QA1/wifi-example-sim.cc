@@ -58,11 +58,6 @@ NS_LOG_COMPONENT_DEFINE ("WiFiExampleSim");
 
 //NS_LOG_COMPONENT_DEFINE ("Throughput");
 
-//double throughput_1 = 0;
-
-//unsigned int bytesTotal;
-
-
 void TxCallback (Ptr<CounterCalculator<uint32_t> > datac,
                  std::string path, Ptr<const Packet> packet) {
   NS_LOG_INFO ("Sent frame counted in " <<
@@ -70,23 +65,6 @@ void TxCallback (Ptr<CounterCalculator<uint32_t> > datac,
   datac->Update ();
   // end TxCallback
 }
-
-/*
- * Function to compute the throughput at the server taken as argument
- *
-void get_throughput (Ptr<UdpServer> server_1, int i) {
-        int packets = server_1->GetReceived();
-        bytesTotal = packets*1023;
-        Time t = Simulator::Now ();
-        float kbs = (bytesTotal*8.0)/1000/t.GetSeconds ();
-        std::cout << i << "     " << kbs << "Kbps" << std::endl;
-
-        *
-        * Get the throughput every 1 second
-        *
-        Simulator::Schedule (Seconds (1.0), &get_throughput, server_1, i);
-}
-*/
 
 //----------------------------------------------------------------------
 //-- main
@@ -192,7 +170,7 @@ int main (int argc, char *argv[]) {
   Ptr<Sender> sender = CreateObject<Sender>();
   sender->SetAttribute("Port", UintegerValue(1000));//Lisening Port of the first WiFi user
   sender->SetAttribute("PacketSize", UintegerValue (1400)); //bytes
-  sender->SetAttribute("Interval", StringValue ("ns3::ConstantRandomVariable[Constant=5.05]")); //seconds
+  sender->SetAttribute("Interval", StringValue ("ns3::ConstantRandomVariable[Constant=0.05]")); //seconds
   sender->SetAttribute("NumPackets",UintegerValue (100000000));
   appSource->AddApplication (sender);
   sender->SetStartTime (Seconds (0));

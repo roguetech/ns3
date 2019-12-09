@@ -1,6 +1,7 @@
 #!/bin/sh
 
-DISTANCES="0 10 20 30 40 50 60 70 80 90 100 110 120 130 140 150"
+DISTANCES="50"
+DISTANCES1="100"
 TRIALS="1"
 
 SIMTIME=20 #Default in wifi-example-sim.cc: The transmission Time approximately equals to the Simulation Running Time
@@ -46,7 +47,7 @@ do
   for distance in $DISTANCES
   do
     echo Trial $trial, distance $distance
-    ../../waf --run "WiFi-QB --distance=$distance --run=run-$distance-$trial"
+    ../../waf --run "WiFi-QC1 --distance=$distance --distance1=$DISTANCES1 --run=run-$distance-$trial"
   done
 done
 
@@ -61,6 +62,7 @@ done
 #    order by abs(Experiments.input) ASC;"
 
 mv ../../DataOfUser1.db .
+mv ../../*.pcap .
 
 CMD="select exp.input, tx.value, rx.value, delay.value \
     from Singletons rx, Singletons tx, Experiments exp, Singletons delay \

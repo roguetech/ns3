@@ -7,7 +7,7 @@ set out "wifi-throughput.eps"
 #set title "Average Throughput Over Distance"
 set xlabel "Distance (m)"
 set xrange [0:150]
-set ylabel "Throuhput [Mbps]"
+set ylabel "Throughput [Mbps]"
 set yrange [0:1]
 
 plot "throughput.data" with lines title "WiFi Throughput vs. Distance"

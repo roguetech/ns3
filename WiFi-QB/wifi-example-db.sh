@@ -61,6 +61,7 @@ done
 #    order by abs(Experiments.input) ASC;"
 
 mv ../../DataOfUser1.db .
+mv ../../*.pcap .
 
 CMD="select exp.input, tx.value, rx.value, delay.value \
     from Singletons rx, Singletons tx, Experiments exp, Singletons delay \

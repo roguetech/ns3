@@ -321,7 +321,7 @@ int main (int argc, char *argv[]) {
   DBQA2.AddDataCalculator (delayStat);
 
 
-
+  wifiPhy.EnablePcap ("wifi-simple-interference", nodeDevices.Get (0));
 
   //------------------------------------------------------------
   //-- Run the simulation

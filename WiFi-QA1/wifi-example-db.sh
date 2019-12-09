@@ -44,7 +44,7 @@ do
   for distance in $DISTANCES
   do
     echo Trial $trial, distance $distance
-    ../../waf --run "WiFi-QA1 --format=db --distance=$distance --run=run-$distance-$trial"
+    ../../waf --run "WiFi-QA1 --distance=$distance --run=run-$distance-$trial"
   done
 done
 
@@ -60,18 +60,22 @@ done
 
 mv ../../DataOfUser1.db .
 
-CMD="select exp.input,avg(100-((rx.value*100)/tx.value)) \
-    from Singletons rx, Singletons tx, Experiments exp \
+CMD="select exp.input, tx.value, rx.value, delay.value \
+    from Singletons rx, Singletons tx, Experiments exp, Singletons delay \
     where rx.run = tx.run AND \
           rx.run = exp.run AND \
+          delay.run = exp.run AND \
           rx.variable='receiver-rx-packets' AND \
-          tx.variable='sender-tx-packets' \
+          tx.variable='sender-tx-packets' AND \
+          delay.variable='delay-average' \
     group by exp.input \
     order by abs(exp.input) ASC;"
 
 sqlite3 -noheader DataOfUser1.db "$CMD" > wifi-default.data
-sed -i.bak "s/|/   /" wifi-default.data
-rm wifi-default.data.bak
+sed -i "s/|/ /g" wifi-default.temp
+awk '{print $1 " " $3*8*1000/20/1000/1000}' wifi-default.temp >throughput.data
+awk '{print $1 " " $4/1000000}' wifi-default.temp >delay.data
+awk '{print $1 " " ($2-$3)/$2*100}' wifi-default.temp >loss.data
 gnuplot wifi-example.gnuplot
 
 echo "Done; data in wifi-default.data, plot in wifi-default.eps"
